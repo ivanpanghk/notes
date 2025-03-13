@@ -1,0 +1,15 @@
+{% for node in include.nodes %}
+    <li>
+        {% assign node_props = node | split: "," %}
+        {% assign name = node_props[0] | split: ":" | last %}
+        {% if node_props[1] contains "path:" %}
+            → <a href="{{ node_props[1] | split: ':' | last }}">{{ name }}</a>
+        {% else %}
+            <span class="toggle">📁 {{ name }}</span>
+            <ul>
+                {% assign children = node_props[1] | split: ":" | last | split: "|" %}
+                {% include tree.liquid nodes=children %}
+            </ul>
+        {% endif %}
+    </li>
+{% endfor %}
