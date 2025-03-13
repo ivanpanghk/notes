@@ -1,5 +1,7 @@
 title: Collected pages
 theme: minima  # 使用默認主題（若需要）
+include:
+  - _site
 exclude:
    - index.html
    - readme.md
