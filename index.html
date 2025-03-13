@@ -4,23 +4,49 @@ layout: default
 <!DOCTYPE html>
 <html>
 <head>
-    <title>HTML 文件列表</title>
+    <title>按文件夾分類的 HTML 列表</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
+        .folder { color: #586069; margin: 15px 0; }
         a { color: #0366d6; text-decoration: none; }
         a:hover { text-decoration: underline; }
+        ul { list-style: none; padding-left: 20px; }
     </style>
 </head>
 <body>
-    <h1>HTML 文件列表</h1>
-    <ul>
-        {% for file in site.static_files %}
-            {% if file.extname == ".html" and file.path != "/index.html" %}
-                <li>
-                    <a href="{{ file.path | relative_url }}">{{ file.path | remove: "/" }}</a>
-                </li>
-            {% endif %}
-        {% endfor %}
-    </ul>
+    <h1>📂 文件夾分類列表</h1>
+
+    <!-- 按文件夾分組 -->
+    {% assign folders = "" | split: "," %}
+    {% for file in site.static_files %}
+        {% if file.extname == ".html" and file.path != "/index.html" %}
+            <!-- 提取文件夾路徑 -->
+            {% assign path_parts = file.path | split: "/" %}
+            {% assign folder = path_parts[1] | default: "根目錄" %}
+            {% unless folders contains folder %}
+                {% assign folders = folders | push: folder %}
+            {% endunless %}
+        {% endif %}
+    {% endfor %}
+
+    <!-- 生成每個文件夾的列表 -->
+    {% for folder in folders %}
+        <div class="folder">
+            📁 {{ folder }}/
+            <ul>
+                {% for file in site.static_files %}
+                    {% if file.extname == ".html" and file.path != "/index.html" %}
+                        {% assign path_parts = file.path | split: "/" %}
+                        {% assign current_folder = path_parts[1] | default: "根目錄" %}
+                        {% if current_folder == folder %}
+                            <li>
+                                → <a href="{{ file.path }}">{{ path_parts[-1] }}</a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
 </body>
 </html>
