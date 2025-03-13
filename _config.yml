@@ -1,7 +1,11 @@
 title: Collected pages
-theme: minima  # 使用默認主題（若需要）
-include:
-  - _site
+theme: minima
+
+# 僅排除不需要處理的文件，保留 index.html
 exclude:
-   - index.html
-   - readme.md
+  - README.md   # 修正大小寫（確保與實際文件名一致）
+  - LICENSE
+  - node_modules
+  - .gitignore
+  - Gemfile
+  - Gemfile.lock
