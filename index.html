@@ -27,7 +27,7 @@ layout: default
 <body>
     <h1>📂 樹狀目錄結構</h1>
     
-    <!-- 建立樹狀結構 -->
+    <!-- 完全兼容的樹結構構建 -->
     {% assign tree = "" | split: "," %}
     {% for file in site.static_files %}
         {% if file.extname == ".html" and file.path != "/index.html" %}
@@ -39,27 +39,33 @@ layout: default
                 
                 {% assign existing = nil %}
                 {% for item in node %}
-                    {% if item.name == part %}
+                    {% assign item_name = item | split: ":" | first %}
+                    {% if item_name == part %}
                         {% assign existing = item %}
                         {% break %}
                     {% endif %}
                 {% endfor %}
 
                 {% unless existing %}
-                    {% assign newNode = "" | split: "," %}
-                    {% assign newNode = newNode | push: {"name": part, "children": "" | split: ","} %}
-                    {% assign node = node | concat: newNode %}
+                    {% assign children_array = "" | split: "," %}
+                    {% assign new_node = "" | split: "," %}
+                    {% capture node_data %}{{ part }}:{% endcapture %}
+                    {% assign new_node = new_node | push: node_data %}
+                    {% assign node = node | concat: new_node %}
                     {% assign existing = node | last %}
                 {% endunless %}
-                {% assign node = existing.children %}
+                
+                {% assign node = existing | split: ":" | last | split: "|" %}
             {% endfor %}
-            {% assign newNode = "" | split: "," %}
-            {% assign newNode = newNode | push: {"name": parts.last, "path": file.path} %}
-            {% assign node = node | concat: newNode %}
+            
+            {% assign new_leaf = "" | split: "," %}
+            {% capture leaf_data %}file:{{ parts.last }}|{{ file.path }}{% endcapture %}
+            {% assign new_leaf = new_leaf | push: leaf_data %}
+            {% assign node = node | concat: new_leaf %}
         {% endif %}
     {% endfor %}
 
-    <!-- 遞歸渲染樹狀結構 -->
+    <!-- 渲染樹狀結構 -->
     <ul class="tree">
         {% include tree.liquid nodes=tree %}
     </ul>
