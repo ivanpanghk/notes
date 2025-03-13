@@ -36,17 +36,25 @@ layout: default
             {% for part in parts offset:1 %}
                 {% assign part = part | replace: ".html", "" %}
                 {% if forloop.last %}{% continue %}{% endif %}
-                {% assign existing = node | where: "name", part | first %}
+                
+                {% assign existing = nil %}
+                {% for item in node %}
+                    {% if item.name == part %}
+                        {% assign existing = item %}
+                        {% break %}
+                    {% endif %}
+                {% endfor %}
+
                 {% unless existing %}
                     {% assign newNode = "" | split: "," %}
-                    {% assign newNode = newNode | push: {name: part, children: "" | split: ","} %}
+                    {% assign newNode = newNode | push: {"name": part, "children": "" | split: ","} %}
                     {% assign node = node | concat: newNode %}
                     {% assign existing = node | last %}
                 {% endunless %}
                 {% assign node = existing.children %}
             {% endfor %}
             {% assign newNode = "" | split: "," %}
-            {% assign newNode = newNode | push: {name: parts.last, path: file.path} %}
+            {% assign newNode = newNode | push: {"name": parts.last, "path": file.path} %}
             {% assign node = node | concat: newNode %}
         {% endif %}
     {% endfor %}
