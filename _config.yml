@@ -1,0 +1,5 @@
+html_files:
+   - "**/*.html"
+exclude:
+   - index.html
+   - readme.md
