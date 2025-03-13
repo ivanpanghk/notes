@@ -1,3 +1,5 @@
+title: Collected pages
+theme: minima  # 使用默認主題（若需要）
 exclude:
    - index.html
    - readme.md
