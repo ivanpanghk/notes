@@ -4,109 +4,49 @@ layout: default
 <!DOCTYPE html>
 <html>
 <head>
-    <title>樹狀目錄列表</title>
+    <title>按文件夾分類的 HTML 列表</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        .tree { list-style: none; padding-left: 20px; }
-        .tree ul { list-style: none; padding-left: 20px; display: none; margin-left: 15px; }
-        .tree li { margin: 5px 0; position: relative; }
-        .toggle { cursor: pointer; }
-        .toggle::before {
-            content: '▶ ';
-            font-size: 0.8em;
-            color: #666;
-        }
-        .active > .toggle::before {
-            content: '▼ ';
-        }
-        .active > ul { display: block; }
-        .active ul {  /* 双保险选择器 */
-    display: block !important;
-}
+        .folder { color: #586069; margin: 15px 0; }
         a { color: #0366d6; text-decoration: none; }
         a:hover { text-decoration: underline; }
+        ul { list-style: none; padding-left: 20px; }
     </style>
 </head>
 <body>
-    <h1>📂 樹狀目錄結構</h1>
-    
-    <!-- 完全兼容的樹結構構建 -->
-    {% assign tree = "" | split: "," %}
+    <h1>📂 文件夾分類列表</h1>
+
+    <!-- 按文件夾分組 -->
+    {% assign folders = "" | split: "," %}
     {% for file in site.static_files %}
         {% if file.extname == ".html" and file.path != "/index.html" %}
-            {% assign parts = file.path | split: "/" %}
-            {% assign node = tree %}
-            {% for part in parts offset:1 %}
-                {% assign part = part | replace: ".html", "" %}
-                {% if forloop.last %}{% continue %}{% endif %}
-                
-                {% assign existing = nil %}
-                {% for item in node %}
-                    {% assign item_name = item | split: ":" | first %}
-                    {% if item_name == part %}
-                        {% assign existing = item %}
-                        {% break %}
-                    {% endif %}
-                {% endfor %}
-
-                {% unless existing %}
-                    {% assign children_array = "" | split: "," %}
-                    {% assign new_node = "" | split: "," %}
-                    {% capture node_data %}{{ part }}:{% endcapture %}
-                    {% assign new_node = new_node | push: node_data %}
-                    {% assign node = node | concat: new_node %}
-                    {% assign existing = node | last %}
-                {% endunless %}
-                
-                {% assign node = existing | split: ":" | last | split: "|" %}
-            {% endfor %}
-            
-            {% assign new_leaf = "" | split: "," %}
-            {% capture leaf_data %}file:{{ parts.last }}|{{ file.path }}{% endcapture %}
-            {% assign new_leaf = new_leaf | push: leaf_data %}
-            {% assign node = node | concat: new_leaf %}
+            <!-- 提取文件夾路徑 -->
+            {% assign path_parts = file.path | split: "/" %}
+            {% assign folder = path_parts[1] | default: "根目錄" %}
+            {% unless folders contains folder %}
+                {% assign folders = folders | push: folder %}
+            {% endunless %}
         {% endif %}
     {% endfor %}
 
-    <!-- 渲染樹狀結構 -->
-    <ul class="tree">
-        {% include tree.liquid nodes=tree %}
-    </ul>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.toggle').forEach(item => {
-                item.addEventListener('click', event => {
-                    console.log('Toggle clicked'); // 调试用
-                    const parent = event.target.closest('li');
-                    if(parent) {
-                        parent.classList.toggle('active');
-                    }
-                });
-            });
-        });
-        document.addEventListener('DOMContentLoaded', function() {
-            // 绑定点击事件到所有toggle元素
-            function bindToggleEvents() {
-                document.querySelectorAll('.toggle').forEach(item => {
-                    item.addEventListener('click', function(event) {
-                        event.stopPropagation();
-                        const parent = this.closest('li');
-                        parent.classList.toggle('active');
-                    });
-                });
-            }
-            
-            // 初始化绑定
-            bindToggleEvents();
-            
-            // 动态内容加载后重新绑定（如果有异步加载）
-            const observer = new MutationObserver(bindToggleEvents);
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-        });
-    </script>
+    <!-- 生成每個文件夾的列表 -->
+    {% for folder in folders %}
+        <div class="folder">
+            📁 {{ folder }}/
+            <ul>
+                {% for file in site.static_files %}
+                    {% if file.extname == ".html" and file.path != "/index.html" %}
+                        {% assign path_parts = file.path | split: "/" %}
+                        {% assign current_folder = path_parts[1] | default: "根目錄" %}
+                        {% if current_folder == folder %}
+                            <li>
+                                → <a href="{{ file.path }}">{{ path_parts[-1] }}</a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
 </body>
 </html>
