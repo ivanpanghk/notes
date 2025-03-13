@@ -8,7 +8,7 @@ layout: default
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .tree { list-style: none; padding-left: 20px; }
-        .tree ul { list-style: none; padding-left: 20px; display: none; }
+        .tree ul { list-style: none; padding-left: 20px; display: none; margin-left: 15px; }
         .tree li { margin: 5px 0; position: relative; }
         .toggle { cursor: pointer; }
         .toggle::before {
@@ -20,6 +20,9 @@ layout: default
             content: '▼ ';
         }
         .active > ul { display: block; }
+        .active ul {  /* 双保险选择器 */
+    display: block !important;
+}
         a { color: #0366d6; text-decoration: none; }
         a:hover { text-decoration: underline; }
     </style>
@@ -71,11 +74,37 @@ layout: default
     </ul>
 
     <script>
-        document.querySelectorAll('.toggle').forEach(item => {
-            item.addEventListener('click', event => {
-                event.preventDefault();
-                const parent = event.target.closest('li');
-                parent.classList.toggle('active');
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.toggle').forEach(item => {
+                item.addEventListener('click', event => {
+                    console.log('Toggle clicked'); // 调试用
+                    const parent = event.target.closest('li');
+                    if(parent) {
+                        parent.classList.toggle('active');
+                    }
+                });
+            });
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定点击事件到所有toggle元素
+            function bindToggleEvents() {
+                document.querySelectorAll('.toggle').forEach(item => {
+                    item.addEventListener('click', function(event) {
+                        event.stopPropagation();
+                        const parent = this.closest('li');
+                        parent.classList.toggle('active');
+                    });
+                });
+            }
+            
+            // 初始化绑定
+            bindToggleEvents();
+            
+            // 动态内容加载后重新绑定（如果有异步加载）
+            const observer = new MutationObserver(bindToggleEvents);
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
             });
         });
     </script>
