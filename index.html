@@ -4,49 +4,66 @@ layout: default
 <!DOCTYPE html>
 <html>
 <head>
-    <title>按文件夾分類的 HTML 列表</title>
+    <title>樹狀目錄列表</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        .folder { color: #586069; margin: 15px 0; }
+        .tree { list-style: none; padding-left: 20px; }
+        .tree ul { list-style: none; padding-left: 20px; display: none; }
+        .tree li { margin: 5px 0; position: relative; }
+        .toggle { cursor: pointer; }
+        .toggle::before {
+            content: '▶ ';
+            font-size: 0.8em;
+            color: #666;
+        }
+        .active > .toggle::before {
+            content: '▼ ';
+        }
+        .active > ul { display: block; }
         a { color: #0366d6; text-decoration: none; }
         a:hover { text-decoration: underline; }
-        ul { list-style: none; padding-left: 20px; }
     </style>
 </head>
 <body>
-    <h1>📂 文件夾分類列表</h1>
-
-    <!-- 按文件夾分組 -->
-    {% assign folders = "" | split: "," %}
+    <h1>📂 樹狀目錄結構</h1>
+    
+    <!-- 建立樹狀結構 -->
+    {% assign tree = "" | split: "," %}
     {% for file in site.static_files %}
         {% if file.extname == ".html" and file.path != "/index.html" %}
-            <!-- 提取文件夾路徑 -->
-            {% assign path_parts = file.path | split: "/" %}
-            {% assign folder = path_parts[1] | default: "根目錄" %}
-            {% unless folders contains folder %}
-                {% assign folders = folders | push: folder %}
-            {% endunless %}
+            {% assign parts = file.path | split: "/" %}
+            {% assign node = tree %}
+            {% for part in parts offset:1 %}
+                {% assign part = part | replace: ".html", "" %}
+                {% if forloop.last %}{% continue %}{% endif %}
+                {% assign existing = node | where: "name", part | first %}
+                {% unless existing %}
+                    {% assign newNode = "" | split: "," %}
+                    {% assign newNode = newNode | push: {name: part, children: "" | split: ","} %}
+                    {% assign node = node | concat: newNode %}
+                    {% assign existing = node | last %}
+                {% endunless %}
+                {% assign node = existing.children %}
+            {% endfor %}
+            {% assign newNode = "" | split: "," %}
+            {% assign newNode = newNode | push: {name: parts.last, path: file.path} %}
+            {% assign node = node | concat: newNode %}
         {% endif %}
     {% endfor %}
 
-    <!-- 生成每個文件夾的列表 -->
-    {% for folder in folders %}
-        <div class="folder">
-            📁 {{ folder }}/
-            <ul>
-                {% for file in site.static_files %}
-                    {% if file.extname == ".html" and file.path != "/index.html" %}
-                        {% assign path_parts = file.path | split: "/" %}
-                        {% assign current_folder = path_parts[1] | default: "根目錄" %}
-                        {% if current_folder == folder %}
-                            <li>
-                                → <a href="{{ file.path }}">{{ path_parts[-1] }}</a>
-                            </li>
-                        {% endif %}
-                    {% endif %}
-                {% endfor %}
-            </ul>
-        </div>
-    {% endfor %}
+    <!-- 遞歸渲染樹狀結構 -->
+    <ul class="tree">
+        {% include tree.liquid nodes=tree %}
+    </ul>
+
+    <script>
+        document.querySelectorAll('.toggle').forEach(item => {
+            item.addEventListener('click', event => {
+                event.preventDefault();
+                const parent = event.target.closest('li');
+                parent.classList.toggle('active');
+            });
+        });
+    </script>
 </body>
 </html>
