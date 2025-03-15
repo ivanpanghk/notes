@@ -7,46 +7,85 @@ layout: default
     <title>按文件夾分類的 HTML 列表</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        .folder { color: #586069; margin: 15px 0; }
+        .tabs { border-bottom: 1px solid #ccc; margin-bottom: 20px; }
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #586069;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-button:hover { color: #0366d6; }
+        .tab-button.active {
+            color: #0366d6;
+            border-bottom: 2px solid #0366d6;
+        }
+        .tab-content { display: none; padding: 20px 0; }
+        .tab-content.active { display: block; }
+        ul { list-style: none; padding-left: 0; }
         a { color: #0366d6; text-decoration: none; }
         a:hover { text-decoration: underline; }
-        ul { list-style: none; padding-left: 20px; }
     </style>
 </head>
 <body>
     <h1>📂 文件夾分類列表</h1>
 
-    <!-- 按文件夾分組 -->
-    {% assign folders = "" | split: "," %}
-    {% for file in site.static_files %}
-        {% if file.extname == ".html" and file.path != "/index.html" %}
-            <!-- 提取文件夾路徑 -->
-            {% assign path_parts = file.path | split: "/" %}
-            {% assign folder = path_parts[1] | default: "根目錄" %}
-            {% unless folders contains folder %}
-                {% assign folders = folders | push: folder %}
-            {% endunless %}
-        {% endif %}
-    {% endfor %}
+    <div class="tabs">
+        <!-- 生成标签按钮 -->
+        {% assign folders = "" | split: "," %}
+        {% for file in site.static_files %}
+            {% if file.extname == ".html" and file.path != "/index.html" %}
+                {% assign path_parts = file.path | split: "/" %}
+                {% assign folder = path_parts[1] | default: "根目錄" %}
+                {% unless folders contains folder %}
+                    {% assign folders = folders | push: folder %}
+                {% endunless %}
+            {% endif %}
+        {% endfor %}
 
-    <!-- 生成每個文件夾的列表 -->
+        {% for folder in folders %}
+            <button class="tab-button{% if forloop.first %} active{% endif %}" 
+                    onclick="switchTab('{{ folder | handleize }}')">
+                📁 {{ folder }}
+            </button>
+        {% endfor %}
+    </div>
+
+    <!-- 生成标签内容 -->
     {% for folder in folders %}
-        <div class="folder">
-            📁 {{ folder }}/
+        <div id="{{ folder | handleize }}" class="tab-content{% if forloop.first %} active{% endif %}">
             <ul>
                 {% for file in site.static_files %}
                     {% if file.extname == ".html" and file.path != "/index.html" %}
                         {% assign path_parts = file.path | split: "/" %}
                         {% assign current_folder = path_parts[1] | default: "根目錄" %}
                         {% if current_folder == folder %}
-                            <li>
-                               <li>→ <a href="{{ file.path | relative_url }}">{{ path_parts[-1] }}</a></li>
-                            </li>
+                            <li>→ <a href="{{ file.path | relative_url }}">{{ path_parts[-1] }}</a></li>
                         {% endif %}
                     {% endif %}
                 {% endfor %}
             </ul>
         </div>
     {% endfor %}
+
+    <script>
+        function switchTab(tabId) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有按钮激活状态
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // 显示选中内容并设置激活状态
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+    </script>
 </body>
 </html>
