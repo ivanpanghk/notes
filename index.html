@@ -1,16 +1,42 @@
----
-layout: default
----
 <!DOCTYPE html>
 <html>
 <head>
     <title>按文件夾分類的 HTML 列表</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .folder { color: #586069; margin: 15px 0; }
-        a { color: #0366d6; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        ul { list-style: none; padding-left: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .folder {
+            color: #586069;
+            margin: 10px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .folder-icon {
+            margin-right: 5px;
+        }
+        .folder-content {
+            padding-left: 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .folder-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .open {
+            max-height: 1000px; /* 足够大的高度以显示所有内容 */
+        }
     </style>
 </head>
 <body>
@@ -31,8 +57,11 @@ layout: default
 
     <!-- 生成每個文件夾的列表 -->
     {% for folder in folders %}
-        <div class="folder">
-            📁 {{ folder }}/
+        <div class="folder" onclick="toggleFolder(this)">
+            <span class="folder-icon">📁</span>
+            <span class="folder-name">{{ folder }}/</span>
+        </div>
+        <div class="folder-content">
             <ul>
                 {% for file in site.static_files %}
                     {% if file.extname == ".html" and file.path != "/index.html" %}
@@ -48,5 +77,19 @@ layout: default
             </ul>
         </div>
     {% endfor %}
+
+    <script>
+        function toggleFolder(folderElement) {
+            const folderContent = folderElement.nextElementSibling;
+            const isOpen = folderContent.classList.contains('open');
+            
+            // 切换文件夹内容的显示状态
+            folderContent.classList.toggle('open', !isOpen);
+            
+            // 更新文件夹图标
+            const icon = folderElement.querySelector('.folder-icon');
+            icon.textContent = isOpen ? '📁' : '📂';
+        }
+    </script>
 </body>
 </html>
