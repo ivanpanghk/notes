@@ -40,7 +40,7 @@ layout: default
                         {% assign current_folder = path_parts[1] | default: "根目錄" %}
                         {% if current_folder == folder %}
                             <li>
-                                → <a href="{{ file.path }}">{{ path_parts[-1] }}</a>
+                               <li>→ <a href="{{ file.path | relative_url }}">{{ path_parts[-1] }}</a></li>
                             </li>
                         {% endif %}
                     {% endif %}
